@@ -2,17 +2,18 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {RecipeService} from '../recipes/recipe.service';
 import {AuthService} from '../auth/auth.service';
+import {Recipe} from '../recipes/recipe.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataStorageService {
-   url: string = '.../recipes.json';
+  url: string = '.../recipes.json';
 
   constructor(private http: HttpClient,
               private recipeService: RecipeService,
               private authServer: AuthService
-             ) {
+  ) {
   }
 
   storeRecieps() {
@@ -22,24 +23,17 @@ export class DataStorageService {
 
   getRecipes() {
     const recipesRestored = JSON.parse(localStorage.getItem('recipes'));
-    console.log("recipesRestored", recipesRestored);
+    console.log('recipesRestored', recipesRestored);
     this.recipeService.setRecipes(recipesRestored);
 
-    const token = this.authServer.getToke();
+    //const token = this.authServer.getToke();
+    //const urlWithToken = this.url + '?auth=' + token;
+    //console.log('getRecipes:', urlWithToken);
 
-    const urlWithToken = this.url +"?auth="+token;
-    console.log('getRecipes:', urlWithToken);
-    this.http.get(urlWithToken)
+    this.http.get<Recipe[]>(this.url)
       .subscribe(
-        (res: Response) => {
+        (res: Recipe[]) => {
           console.log('res', res);
-          res.json().then(
-            (recipes) => {
-              console.log(recipes);
-              this.recipeService.setRecipes(recipes);
-            }).catch((err) => {
-            console.log(err);
-          });
         },
         (err) => {
           console.log('getRecipes error:', err);

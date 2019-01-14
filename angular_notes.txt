@@ -476,6 +476,9 @@ if(recipe['ingredients']) {
     }
 }
 
+// Clone a Object
+cloned = {... obj}
+
 // ----------------------
 // Pipe
 
@@ -558,24 +561,98 @@ const headers = new Headers({'Content-Type': 'application/json'});
   servers,
   {headers: headers});
 
-//- http - Get - transform data using Map
 
-this.http.get('https://udemy-ng-http.firebaseio.com/data')
-    .map(
-      (response: Response) => {
-        const data = response.json();
-        for (const server of data) {
-          server.name = 'FETCHED_' + server.name;
-        }
-        return da;
-      }
-    )
-    .catch(
-      (error: Response) => {
-        return Observable.throw('Something went wrong');
-      }
-    );
+// send and handle events
+this.http.put(url, playload, {
+  observer: 'events'
+});
 
+// Set headers
+headers = new Headers().set('Authorization', 'Bearer XXXXXXXX')
+.append(name, vale);
+
+this.http.put(url, playload, {
+  observer: 'body',
+  headers: headers
+});
+
+
+// Query params
+
+this.http.put(url, playload, {
+  observer: 'body',
+  params: new HttpParams().set/append()...
+});
+
+
+
+//- http - Get with Type Data
+
+this.http.get<Recipe[]>(urlWithToken)
+  .subscribe(
+    (res: Recipe[]) => {
+      console.log('res', res);
+    },
+    (err) => {
+      console.log('getRecipes error:', err);
+    }
+  );
+
+//- http - Get Full response
+this.http.get(url, {
+    observe:'response',
+    responseType: 'text'
+});
+
+
+this.http.get(url, {
+    observe:'body',
+    responseType: 'text'
+});
+
+
+this.http.get(url, {
+    observe:'body',
+    responseType: 'blob'
+});
+
+this.http.get(url, {
+    observe:'body',
+    responseType: 'json'
+});
+
+
+// HttpRequest - reportProgress
+const req = new HttpRequest('PUT',
+ url, data, {
+    reportProgress:true,
+    new HttpParams()..
+ });
+ this.httpClient.request(req);
+ # Object{type: 1, loaded: 200, total:500 }
+
+
+// Interceptors
+export class AuthInteceptor implements HttpInterceptor {
+   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+        Todo ...
+        return next.handle(req);
+   }
+}
+
+export class LoggingInterceptor implements  HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    return next.handle(req).pipe(tap(
+         event => {
+           console.log("LoggingInterceptor:", event);
+         }
+    ))
+
+# in CoreModule
+providers: [
+  {provide: HTTP_INTERCEPTORS, useClass: AuthInteceptor, multi: true},
+  {provide: HTTP_INTERCEPTORS, useClass: LoggingInterceptor, multi: true}
+]
 
 
 // Optimization
