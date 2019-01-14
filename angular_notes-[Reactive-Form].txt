@@ -1,0 +1,412 @@
+// ------------------
+// ReactiveForm
+
+imports: [ReactiveFormsModule]
+
+//-------------------------------
+
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <div formGroupName="userData">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              class="form-control">
+            <span
+              *ngIf="!signupForm.get('userData.username').valid && signupForm.get('userData.username').touched"
+              class="help-block">
+              <span *ngIf="signupForm.get('userData.username').errors['nameIsForbidden']">This name is invalid!</span>
+              <span *ngIf="signupForm.get('userData.username').errors['required']">This field is required!</span>
+
+            </span>
+          </div>
+          <div class="form-group">
+            <label for="email">email</label>
+            <input
+              type="text"
+              id="email"
+              formControlName="email"
+              class="form-control">
+            <span
+              *ngIf="!signupForm.get('userData.email').valid && signupForm.get('userData.email').touched"
+              class="help-block">Please enter a valid email!</span>
+          </div>
+        </div>
+        <div class="radio" *ngFor="let gender of genders">
+          <label>
+            <input
+              type="radio"
+              formControlName="gender"
+              [value]="gender">{{ gender }}
+          </label>
+        </div>
+        <div formArrayName="hobbies">
+          <h4>Your Hobbies</h4>
+          <button
+            class="btn btn-default"
+            type="button"
+            (click)="onAddHobby()">Add Hobby
+          </button>
+          <div
+            class="form-group"
+            *ngFor="let hobbyControl of signupForm.get('hobbies').controls; let i = index">
+            <input type="text" class="form-control" [formControlName]="i">
+          </div>
+        </div>
+        <span
+          *ngIf="!signupForm.valid && signupForm.touched"
+          class="help-block">Please enter valid data!</span>
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+export class AppComponent implements OnInit {
+  genders = ['male', 'female'];
+  signupForm: FormGroup;
+
+  forbiddenUsernames = ['Chris', 'Anna'];
+
+  constructor() {
+  }
+
+  ngOnInit() {
+    this.signupForm = new FormGroup({
+      'userData': new FormGroup({
+        'username': new FormControl(
+          null,
+          [Validators.required, this.forbiddenNames.bind(this)]),
+
+        'email': new FormControl(null,
+          [Validators.required, Validators.email],
+          this.forbiddenEmails)
+      }),
+      'gender': new FormControl('male'),
+      'hobbies': new FormArray([])
+    });
+
+    // this.signupForm.valueChanges.subscribe(
+    //   (value) => console.log(value)
+    // );
+
+    this.signupForm.statusChanges.subscribe(
+      (status) => console.log(status)
+    );
+
+    this.signupForm.setValue({
+      'userData': {
+        'username': 'Max',
+        'email': 'max@test.com'
+      },
+      'gender': 'male',
+      'hobbies': []
+    });
+
+    this.signupForm.patchValue({
+      'userData': {
+        'username': 'Anna',
+      }
+    });
+  }
+
+  onSubmit() {
+    console.log(this.signupForm);
+    this.signupForm.reset();
+  }
+
+  onAddHobby() {
+    const control = new FormControl(null, Validators.required);
+    (<FormArray>this.signupForm.get('hobbies')).push(control);
+  }
+
+  forbiddenNames(control: FormControl): { [s: string]: boolean } {
+    if (this.forbiddenUsernames.indexOf(control.value) !== -1) {
+      return {'nameIsForbidden': true};
+    }
+    return null;
+  }
+
+  forbiddenEmails(control: FormControl): Promise<any> | Observable<any> {
+    const promise = new Promise<any>((resolve, reject) => {
+      setTimeout(() => {
+        if (control.value === 'test@test.com') {
+          resolve({'emailIsForbidden': true});
+        } else {
+          resolve(null);
+        }
+      }, 1500);
+    });
+    return promise;
+  }
+}
+
+
+
+// local refer - to preview image
+
+ <div class="row">
+      <div class="col-xs-12">
+        <div class="form-group">
+          <label for="imagePath">Image URL</label>
+          <input
+            type="text"
+            id="imagePath"
+            formControlName="imagePath"
+            class="form-control"
+            #imagePath
+          >
+        </div>
+      </div>
+ </div>
+
+<div class="row">
+    <div class="col-xs-12">
+      <img [src]="imagePath.value" class="img-responsive">
+    </div>
+</div>
+
+
+// FormControl  - formGroupName -formControlName
+
+<form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+   <div formGroupName="userData">
+   <input
+           type="text"
+           id="username"
+           formControlName="username"  //[formControlName]="'username'"
+           class="form-control">
+     ...
+   </div>
+</form>
+
+// css
+.container {
+  margin-top: 30px;
+}
+
+input.ng-invalid.ng-touched {
+  border: 1px solid red;
+}
+
+
+// config validation
+
+this.signupForm = new FormGroup({
+      'userData': new FormGroup({
+        'username': new FormControl(null, [Validators.required, this.forbiddenNames.bind(this)]),
+        'email': new FormControl(null, [Validators.required, Validators.email], this.forbiddenEmails)
+      }),
+      'gender': new FormControl('male'),
+      'hobbies': new FormArray([])
+    });
+
+// config in FormControl, you cannot config formControl in the html file
+
+new FormControl(null, [Validators.required, Validators.email], this.forbiddenEmails)
+
+
+// show validation error message
+<input
+        type="text"
+        id="username"
+        formControlName="username"
+        class="form-control">
+  <span
+        *ngIf="!signupForm.get('userData.username').valid && signupForm.get('userData.username').touched"
+        class="help-block">
+        <span *ngIf="signupForm.get('userData.username').errors['nameIsForbidden']">This name is invalid!</span>
+        <span *ngIf="signupForm.get('userData.username').errors['required']">This field is required!</span>
+
+  </span>
+
+
+// get formControl value via 'Path' in formGroup
+// path: formGroupName.formControlName
+signupForm.get('userData.username')
+
+
+// FormArray
+// add a FormControl to Form dynamic
+
+<div formArrayName="hobbies">
+    <h4>Your Hobbies</h4>
+    <button
+      class="btn btn-default"
+      type="button"
+      (click)="onAddHobby()">Add Hobby
+    </button>
+    <div
+      class="form-group"
+      *ngFor="let hobbyControl of signupForm.get('hobbies').controls; let i = index">
+      <input type="text" class="form-control" [formControlName]="i">
+    </div>
+</div>
+
+'hobbies': new FormArray([])
+
+onAddHobby() {
+  const control = new FormControl(null, Validators.required);
+  (<FormArray>this.signupForm.get('hobbies')).push(control);
+}
+
+// force cast to <FormArray>
+(<FormArray>this.signupForm.get('hobbies')).push(control);
+
+
+// get FromArray controls
+
+// - get FromArray in component
+onDeleteIngredient(index: number) {
+  const ingredients: FormArray = <FormArray>this.recipeForm.get('ingredients');
+  ingredients.removeAt(index);
+
+}
+
+// - get FromArray used by html
+getControls() {
+  return (<FormArray>this.recipeForm.get('ingredients')).controls;
+}
+
+
+
+// FormArray - a More complicated example
+
+<div class="row">
+  <div class="col-xs-12" formArrayName="ingredients">
+
+    <div class="row"
+         style="margin-top:10px"
+         *ngFor="let ingredientCtrl of recipeForm.get('ingredients').controls; let i = index"
+         [formGroupName]="i">
+
+      <div class="col-xs-8">
+        <input
+          type="text"
+          class="form-control"
+          formControlName="name"
+        >
+      </div>
+
+      <div class="col-xs-2">
+        <input
+          type="number"
+          class="form-control"
+          formControlName="amount"
+        >
+      </div>
+    </div>
+
+  </div>
+</div>
+
+recipeIngredients.push(
+     new FormGroup({
+       'name': new FormControl(ingredient.name),
+       'amount': new FormControl(ingredient.amount)
+     })
+   )
+
+this.recipeForm = new FormGroup(
+       {
+         'name': new FormControl(recipeName),
+         'ingredients': recipeIngredients
+       }
+     );
+
+
+// Custom validation - synch
+
+forbiddenUsernames = ['Chris', 'Anna'];
+
+'username': new FormControl(
+          null,
+          [Validators.required, this.forbiddenNames.bind(this)]),
+
+forbiddenNames(control: FormControl): { [s: string]: boolean } {
+  if (this.forbiddenUsernames.indexOf(control.value) !== -1) {
+    return {'nameIsForbidden': true};
+  }
+  return null;  // should not {'nameIsForbidden': false};
+}
+
+<span *ngIf="signupForm.get('userData.username').errors['nameIsForbidden']">This name is invalid!</span>
+
+
+// Custom validation - asynch
+
+'email': new FormControl(
+         null,
+         [Validators.required, Validators.email], this.forbiddenEmails)
+
+forbiddenEmails(control: FormControl): Promise<any> | Observable<any> {
+  const promise = new Promise<any>((resolve, reject) => {
+    setTimeout(() => {
+      if (control.value === 'test@test.com') {
+        resolve({'emailIsForbidden': true});
+      } else {
+        resolve(null);
+      }
+    }, 1500);
+  });
+  return promise;
+}
+
+
+// Lister form status change
+
+ this.signupForm.valueChanges.subscribe(
+      (value) => console.log(value)  // form data
+ );
+
+  this.signupForm.statusChanges.subscribe(
+     (status) => console.log(status)
+     // Invalid -> pending -> valid
+  );
+
+
+// Set default value
+
+this.signupForm.setValue({
+      'userData': {
+        'username': 'Max',
+        'email': 'max@test.com'
+      },
+      'gender': 'male',
+      'hobbies': []
+    });
+
+this.signupForm.patchValue({
+      'userData': {
+        'username': 'Anna',
+      }
+    });
+
+
+
+//-  Implicit convert - convert form.value to POJO
+
+// you need not do this:
+const name = this.recipeForm.value['name'];
+const imagePath = this.recipeForm.value['imagePath'];
+const description = this.recipeForm.value['description'];
+const ingredients = this.recipeForm.value['ingredients'];
+const newRecipe = new Recipe(name, description, imagePath, ingredients);
+
+// implicit convert
+const newRecipe: Recipe = this.recipeForm.value;
+
+
+
+
+
+
+
+
+
+1

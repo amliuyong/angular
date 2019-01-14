@@ -1,0 +1,452 @@
+
+// -------------------------
+// Router
+
+// routing-final/src/app/app-routing.module.ts
+
+const appRoutes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'users', component: UsersComponent, children: [
+    { path: ':id/:name', component: UserComponent }
+  ] },
+  {
+    path: 'servers',
+    // canActivate: [AuthGuard],
+    canActivateChild: [AuthGuard],
+    component: ServersComponent,
+    children: [
+    { path: ':id', component: ServerComponent, resolve: {server: ServerResolver} },
+    { path: ':id/edit', component: EditServerComponent, canDeactivate: [CanDeactivateGuard] }
+  ] },
+  // { path: 'not-found', component: PageNotFoundComponent },
+  { path: 'not-found', component: ErrorPageComponent, data: {message: 'Page not found!'} },
+  // make sure this is the last item
+  { path: '**', redirectTo: '/not-found' }
+];
+
+@NgModule({
+  imports: [
+    // RouterModule.forRoot(appRoutes, {useHash: true})
+    RouterModule.forRoot(appRoutes)
+  ],
+  exports: [RouterModule]
+})
+export class AppRoutingModule {
+}
+
+// redirectTo
+{path: '', redirectTo: '/recipes', pathMatch:'full'},
+{path: 'recipes', component: RecipesComponent},
+
+
+// router-outlet
+
+{
+  path: 'recipes', component: RecipesComponent, children: [
+    {path: '', component: RecipeStartComponent},
+    {path: ':id', component: RecipeDetailComponent}
+  ]
+},
+<router-outlet></router-outlet> should be in RecipesComponent.html
+
+
+# container.html
+
+<!-- routerLink list -->
+
+<div class="row">
+  <div class="col-xs-12 col-sm-4">
+    <div class="list-group">
+      <a
+        [routerLink]="['/servers', server.id]"
+        [queryParams]="{allowEdit: server.id === 3 ? '1' : '0'}"
+        fragment="loading"
+        href="#"
+        class="list-group-item"
+        *ngFor="let server of servers">
+        {{ server.name }}
+      </a>
+    </div>
+  </div>
+
+<!-- router-outlet  -->
+
+<div class="row">
+  <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+
+
+// Inject route and router to Component
+constructor(private serversService: ServersService,
+            private route: ActivatedRoute,
+            private router: Router) {
+}
+
+
+// trigger router
+
+<li routerLinkActive="active"><a routerLink="/recipes">Recipes</a></li>
+<a routerLink="servers">Servers</a>
+<a [routerLink]="['/users', 10, 'Anna']">Load Anna (10)</a>
+<a style="cursor:pointer;" class="list-group-item clearfix"
+   [routerLink] = "[index]"
+>
+
+http://localhost:4200/servers/3?allowEdit=1#loading
+<a
+  [routerLink]="['/servers', server.id]"
+  [queryParams]="{allowEdit: server.id === 3 ? '1' : '0'}"
+  fragment="loading"
+  href="#"
+  class="list-group-item"
+  *ngFor="let server of servers">
+</a>
+
+this.router.navigate(['/servers', id, 'edit'],
+       {queryParams: {allowEdit: '1'}, fragment: 'loading'}
+       );
+
+this.router.navigate(['servers'], {relativeTo: this.route}); // this.route is ActivateRoute
+
+this.router.navigate(['../'], {relativeTo: this.route});
+this.router.navigate(['../', this.id, 'edit'], {relativeTo: this.route})
+
+// preserve old queryParams when nav to new url
+this.router.navigate(['edit'],
+    {relativeTo: this.route,
+      queryParamsHandling: 'preserve'}
+  );
+
+
+// get params from router
+
+export class UserComponent implements OnInit, OnDestroy {
+  user: {id: number, name: string};
+  paramsSubscription: Subscription;
+
+  constructor(private route: ActivatedRoute) { }
+
+  ngOnInit() {
+    this.user = {
+      id: this.route.snapshot.params['id'],
+      name: this.route.snapshot.params['name']
+    };
+    this.paramsSubscription = this.route.params
+      .subscribe(
+        (params: Params) => {
+          this.user.id = params['id'];
+          this.user.name = params['name'];
+        }
+      );
+  }
+
+  ngOnDestroy() {
+    this.paramsSubscription.unsubscribe();
+  }
+
+}
+
+// change string to int
+// const id = +this.route.snapshot.params['id'];
+
+console.log(this.route.snapshot.queryParams);
+console.log(this.route.snapshot.fragment);
+this.route.queryParams
+  .subscribe(
+    (queryParams: Params) => {
+      this.allowEdit = queryParams['allowEdit'] === '1' ? true : false;
+    }
+  );
+this.route.fragment.subscribe();
+const id = +this.route.snapshot.params['id'];
+
+
+// Guard - CanActivate CanActivateChild
+
+# config in router
+{
+  path: 'servers',
+  // canActivate: [AuthGuard],
+  canActivateChild: [AuthGuard],
+  component: ServersComponent,
+  children: [
+  { path: ':id', component: ServerComponent, resolve: {server: ServerResolver} },
+  { path: ':id/edit', component: EditServerComponent, canDeactivate: [CanDeactivateGuard] }
+] },
+
+routing-final/src/app/auth-guard.service.ts
+
+@Injectable()
+export class AuthGuard implements CanActivate, CanActivateChild {
+  constructor(private authService: AuthService, private router: Router) {}
+
+  canActivate(route: ActivatedRouteSnapshot,
+              state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+    return this.authService.isAuthenticated()
+      .then(
+        (authenticated: boolean) => {
+          if (authenticated) {
+            return true;
+          } else {
+            this.router.navigate(['/']);
+          }
+        }
+      );
+  }
+
+  canActivateChild(route: ActivatedRouteSnapshot,
+                   state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+    return this.canActivate(route, state);
+  }
+}
+
+
+// Guard - CanDeactivate
+# config in router
+{ path: ':id/edit', component: EditServerComponent, canDeactivate: [CanDeactivateGuard] }
+
+// routing-final/src/app/servers/edit-server/can-deactivate-guard.service.ts
+
+export interface CanComponentDeactivate {
+  canDeactivate: () => Observable<boolean> | Promise<boolean> | boolean;
+}
+
+export class CanDeactivateGuard implements CanDeactivate<CanComponentDeactivate> {
+
+  canDeactivate(component: CanComponentDeactivate,
+                currentRoute: ActivatedRouteSnapshot,
+                currentState: RouterStateSnapshot,
+                nextState?: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+    return component.canDeactivate();
+  }
+}
+
+@Component(...)
+export class EditServerComponent implements OnInit, CanComponentDeactivate {
+...
+canDeactivate(): Observable<boolean> | Promise<boolean> | boolean {
+  if (!this.allowEdit) {
+    return true;
+  }
+  if ((this.serverName !== this.server.name ||
+      this.serverStatus !== this.server.status)
+      && !this.changesSaved) {
+    return confirm('Do you want to discard the changes?');
+  } else {
+    return true;
+  }
+}
+}
+
+
+// Pass static data to Component via route
+
+{ path: 'not-found', component: ErrorPageComponent, data: {message: 'Page not found!'} },
+
+export class ErrorPageComponent implements OnInit {
+  errorMessage: string;
+
+  constructor(private route: ActivatedRoute) { }
+
+  ngOnInit() {
+    // this.errorMessage = this.route.snapshot.data['message']; // works but not best
+
+    // better way
+    this.route.data.subscribe(
+      (data: Data) => {
+        this.errorMessage = data['message'];
+      }
+    );
+  }
+}
+
+// Resolve  - exec code before nav to target component, you can get resolved data in target component
+
+{ path: ':id', component: ServerComponent, resolve: {server: ServerResolver} },
+
+interface Server {
+  id: number;
+  name: string;
+  status: string;
+}
+
+@Injectable()
+export class ServerResolver implements Resolve<Server> {
+  constructor(private serversService: ServersService) {}
+
+  resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<Server> | Promise<Server> | Server {
+    return this.serversService.getServer(+route.params['id']);
+  }
+}
+
+export class ServerComponent implements OnInit {
+  server: {id: number, name: string, status: string};
+
+  constructor(private serversService: ServersService,
+              private route: ActivatedRoute,
+              private router: Router) {
+  }
+
+  ngOnInit() {
+    // use resolve - get resolved data
+    this.route.data
+      .subscribe(
+        (data: Data) => {
+          this.server = data['server'];
+        }
+      );
+
+
+    // if no resolve, do like this:
+
+    // const id = +this.route.snapshot.params['id'];
+    // this.server = this.serversService.getServer(id);
+    // this.route.params
+    //   .subscribe(
+    //     (params: Params) => {
+    //       this.server = this.serversService.getServer(+params['id']);
+    //     }
+    //   );
+  }
+}
+
+// Turn on Hash(#) URL for old browser
+
+@NgModule({
+  imports: [
+    RouterModule.forRoot(appRoutes, {useHash: true})
+    // RouterModule.forRoot(appRoutes)
+  ],
+  exports: [RouterModule]
+})
+export class AppRoutingModule {
+}
+
+//--------------------
+// Observable - observer
+
+http://reactivex.io/documentation/observable.html
+
+your code is: observer
+
+ - handle data
+ - handle error
+ - handle completion
+
+# use "rxjs-compat": "6.0.0",
+
+import 'rxjs/Rx';
+import {Observable} from 'rxjs/Observable';
+import {Observer} from 'rxjs/Observer';
+import {Subscription} from 'rxjs/Subscription';
+
+
+// Observable
+const myNumbers = Observable.interval(1000)
+       .map(n => n * 2);
+
+this.numbersObsSubscription = myNumbers.subscribe(
+       (number: number) => {
+         console.log(number);
+       }
+     );
+
+const myObservable = Observable.create((observer: Observer<string>) => {
+           setTimeout(() => {
+             observer.next('first package');
+           }, 2000);
+           setTimeout(() => {
+             observer.next('second package');
+           }, 4000);
+           setTimeout(() => {
+             // observer.error('this does not work');
+             observer.complete();
+           }, 5000);
+           setTimeout(() => {
+             observer.next('third package');
+           }, 6000);
+         });
+
+this.customObsSubscription = myObservable.subscribe(
+           (data: string) => {
+             console.log(data);
+           },
+           (error: string) => {
+             console.log(error);
+           },
+           () => {
+             console.log('completed');
+           }
+         );
+       }
+
+// Subject  - instead of EventEmitter
+
+// Subject in Service
+export class UsersService {
+      userActivated = new Subject();
+  }
+
+// in AComponent
+onActivate() {
+     this.usersService.userActivated.next(this.id);
+  }
+
+// in BComponent
+ngOnInit() {
+      this.usersService.userActivated.subscribe(
+        (id: number) => {
+        ...
+        }
+      );
+    }
+
+
+// unsubscribe
+
+ngOnDestroy() {
+    this.customObsSubscription.unsubscribe();
+}
+
+
+
+// Lazy load Module and preloadingStrategy
+
+in appRoutes:
+{path: 'recipes', loadChildren: './recipes/recipes.module#RecipesModule'},
+
+@NgModule({
+  imports: [RouterModule.forRoot(appRoutes, {preloadingStrategy: PreloadAllModules})],
+  exports: [RouterModule]
+})
+export class AppRoutingModule {
+
+}
+
+RecipesModule should not in the imports: [...] array of AppModule
+
+RecipesRoutingModule:
+
+const recipesRoutes: Routes = [
+  {
+    path: '', component: RecipesComponent, children: [
+      {path: '', component: RecipeStartComponent},
+      {path: 'new', component: RecipeEditComponent, canActivate: [AuthGuard]},
+      {path: ':id', component: RecipeDetailComponent},
+      {path: ':id/edit', component: RecipeEditComponent, canActivate: [AuthGuard]}
+
+    ]
+  }];
+
+@NgModule({
+  imports: [RouterModule.forChild(recipesRoutes)],
+  exports: [RouterModule]
+})
+export class RecipesRoutingModule {
+
+}
+
+Don't provide Services in Shared Module!
+Especially not, if you plan to use them in lazy load modules!

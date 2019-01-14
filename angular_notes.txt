@@ -1,0 +1,613 @@
+https://github.com/angular/angular-cli/wiki
+
+https://angular.io/api
+
+npm install -g @angular/cli
+
+
+ng new my-first-project
+cd my-first-project
+ng serve
+
+Navigate to http://localhost:4200/.
+The app will automatically reload if you change any of the source files.
+
+
+cd my-first-project
+ npm install --save bootstrap@3
+
+edit angular.json
+
+change in build item
+"styles": [
+  "node_modules/bootstrap/dist/css/bootstrap.min.css",
+  "src/styles.css"
+],
+
+ng generate component servers
+ng g c servers
+ng g c recipes --spec false
+ng g c recipes/recipe-list  --spec false
+
+ng g s shopping-list/shopping-list -spec false
+ng g d shared/dropdown --spec false
+
+ng g p filter --spec false   # generate a Pipe
+
+
+ng build --prod --aot  // ahead of time build
+
+//-------------------------//
+//-------------------------//
+
+<input type="text" class="form-control" (input)="onUpdateServerName()">
+
+<input type="text"
+       class="form-control"
+       [(ngModel)]="serverName">
+
+<button
+  class="btn btn-primary"
+  [disabled]="!allowNewServer"
+  (click)="onCreateServer($event)">
+  Add Server
+</button>
+
+<p>{{serverCreationStatus}}</p>
+
+//-- ngIf else
+<p *ngIf="serverCreated; else noServer">
+  Server was created, server name is {{serverName}}
+</p>
+<ng-template #noServer>
+  <p>
+    No server was created!
+  </p>
+</ng-template>
+
+
+// -- ngStyle/ngClass
+<p [ngStyle]="{backgroundColor:getColor()}"
+   [ngClass]="{online: serverStatus === 'online'}"
+>
+  Server with ID  {{serverId}} is {{getServerStatus()}}
+</p>
+
+[ngClass]="getStatusClasses(server)">
+s
+
+
+// ngSwitch
+
+<div [ngSwitch]="value">
+  <p *ngSwitchCase="5">Value is 5</p>
+  <p *ngSwitchCase="10">Value is 10</p>
+  <p *ngSwitchCase="100">Value is 100</p>
+  <p *ngSwitchDefault>Value is Default</p>
+</div>
+
+
+// -- Input from parent component
+<app-child
+  *ngFor="let ele of elements"
+  [elementSrc]="ele">
+</app-child>
+
+export class ChildComponent {
+    @Input('elementSrc') element: {name:string, type:string, conent:string}
+}
+
+// -- Emit data from child component to parent
+// *eleCreated* is method in parent component
+<app-child
+    (elementCreated)="eleCreated($event)"
+></app-child>
+
+export class ChildComponent {
+    @Output() elementCreated = new EventEmitter<{name:string, type:string}>
+
+    onCreate(){
+       this.eleCreated.emit({...})
+    }
+}
+
+
+
+
+// style encapsulation
+@Component({
+...
+encapsulation: ViewEncapsulation.Enulated // None, negative
+})
+
+
+
+// local reference
+
+<input .... #inputElement>
+
+<button (click)="onClick(inputElement)">Click Me</button>
+
+
+onClick(nameInput: HTMLInputElement) {
+   const input = nameInput.value;
+}
+
+
+// viewChild to access native DOM - same component
+
+# child.html
+<input type='text' #elementInput>
+
+# child.ts
+@ViewChild('elementInput') elementInput: ElementRef;
+
+onClick() {
+   elementInput.nativeElement.value;
+}
+
+
+// ContentChild to pass native DOM to child component
+
+#parent.html
+
+<app-child *ngFor="let serverElement of serverElements">
+  <p #contentParagraph>
+    <strong *ngIf="serverElement.type === 'server'" style="color: red">{{ serverElement.content }}</strong>
+    <em *ngIf="serverElement.type === 'blueprint'">{{ serverElement.content }}</em>
+  </p>
+</app-child>
+
+# child.ts
+@ContentChild('contentParagraph') paragraph: ElementRef;
+
+
+// pass content to child component
+
+# parent.html
+<app-child>
+    content html ....
+</app-child>
+
+# child.html
+<div>
+   <ng-content></ng-content>
+...
+</div>
+
+
+// LifeCycle
+//see: cmp-databinding-final/src/app/server-element/server-element.component.ts
+
+ngOnChanges - Called after a bound input property changes
+
+ngOnInit - Called once the component is initialized
+
+ngDoCheck - Called during every change detection run
+
+ngAfterContentInit - Called after content (ng-content) has been projected into view
+
+ngAfterContentChecked - Called every time the projected content has been checked
+
+ngAfterViewInit - Called after the component’s view (and child views) has been initialized
+
+ngAfterViewChecked - Called every time the view (and child views) have been checked
+
+ngOnDestroy -Called once the component is about to be destroyed
+
+
+
+
+// ----------------
+// Driectives
+
+attribute directives
+structural directives
+
+ng g d shared/dropdown --spec false
+
+*ngFor
+*ngIf
+ngClass
+ngStyle
+
+<div *ngIf="!onlyOdd">
+  <li
+    class="list-group-item"
+    [ngClass]="{odd: even % 2 !== 0}"
+    [ngStyle]="{backgroundColor: even % 2 !== 0 ? 'yellow' : 'transparent'}"
+    *ngFor="let even of evenNumbers">
+    {{ even }}
+  </li>
+</div>
+
+Custom attribute directive:
+E.G:
+directives-final/src/app/better-highlight/better-highlight.directive.ts
+
+<p [appBetterHighlight]="'red'" defaultColor="yellow">Style me with a better directive!</p>
+
+<p appBetterHighlight [appBetterHighlight]="'red'" [defaultColor]="'yellow'">Style me with a better directive!</p>
+
+Custom structural directive:
+E.G:
+directives-final/src/app/unless.directive.ts
+
+
+// appDropdown
+
+appDropdown - src/app/shared/dropdown.directive.ts
+
+// nav-bar
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a href="#" class="navbar-brand">Recipe Book</a>
+    </div>
+
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="#" (click)="onSelect('recipe')">Recipes</a></li>
+        <li><a href="#" (click)="onSelect('shopping-list')">Shopping List</a></li>
+      </ul>
+
+      <ul class="nav navbar-nav navbar-right">
+        <li class="dropdown" appDropdown>
+          <a href="#" class="dropdown-toggle" role="button">Manage <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="#">Save Data</a></li>
+            <li><a href="#">Fetch Data</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+// nav bar -- routerLink
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a href="#" class="navbar-brand">Recipe Book</a>
+    </div>
+
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+        <li routerLinkActive="active"><a routerLink="/recipes">Recipes</a></li>
+        <li routerLinkActive="active"><a routerLink="/shopping-list">Shopping List</a></li>
+      </ul>
+
+      <ul class="nav navbar-nav navbar-right">
+        <li class="dropdown" appDropdown>
+          <a style="cursor: pointer" class="dropdown-toggle" role="button">Manage <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a style="cursor: pointer">Save Data</a></li>
+            <li><a style="cursor: pointer">Fetch Data</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+// dropdown button
+
+<div class="row">
+  <div class="col-xs-12">
+
+    <div class="btn-group"
+         appDropdown>
+
+      <button type="button"
+              class="btn btn-primary dropdown-toggle">
+        Manage Recipe <span class="caret"></span>
+      </button>
+
+      <ul class="dropdown-menu">
+        <li><a href="#">To Shopping List</a></li>
+        <li><a href="#">Edit Recipe</a></li>
+        <li><a href="#">Delete Recipe</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+// Tab - router - routerLink
+
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <ul class="nav nav-tabs">
+        <li role="presentation"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}">
+          <a routerLink="/">Home</a>
+        </li>
+        <li role="presentation"
+            routerLinkActive="active">
+          <a routerLink="servers">Servers</a>
+        </li>
+        <li role="presentation"
+            routerLinkActive="active">
+          <a [routerLink]="['users']">Users</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
+
+
+//list-group
+
+<ul class="list-group">
+     <a class="list-group-item"
+        style="cursor: pointer"
+        *ngFor="let ingredient of ingredients"
+     >
+       {{ingredient.name}} ({{ingredient.amount}})
+
+     </a>
+</ul>
+
+
+
+// list-group-item
+
+<div class="row">
+  <div class="col-xs-12">
+<a
+   style="cursor:pointer;"
+   class="list-group-item clearfix"
+   (click)="onSelected()"
+>
+  <div class="pull-left">
+    <h4 class="list-group-item-heading">{{recipe.name}}</h4>
+    <p class="list-group-item-text"> {{recipe.description}}</p>
+  </div>
+  <span class="pull-right">
+        <img
+          [src]="recipe.imagePath"
+          alt="{{recipe.name}}"
+          class="img-responsive" style="max-height:50px;">
+      </span>
+</a>
+</div>
+</div>
+
+
+// Form
+
+<div class="row">
+  <div class="col-xs-12">
+    <form>
+      <div class="row">
+        <div class="col-sm-5 form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" class="form-control" #nameInput>
+        </div>
+
+        <div class="col-sm-2 form-group">
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" class="form-control" #amoutInput>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12">
+          <button class="btn btn-success" type="submit" (click)="onAddItem()">Add</button>
+          <button class="btn btn-danger" type="button">Delete</button>
+          <button class="btn btn-primary" type="button">Clear</button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+
+// ------------------------
+// Service injector
+
+ng g s shopping-list/shopping-list
+
+
+providers: [LoggingService, AccountsService]
+
+Hierarchical | same instance is available
+
+AppModule  -  application-wide
+AppComponent  - All components( but not for other Services)
+Any other Component - The component and its child components
+
+
+// inject LoggingService to AccountsService
+
+@Injectable()
+export class AccountsService {
+  constructor(private loggingService: LoggingService) {}
+}
+
+
+// pass event from ComponentA to ComponentB via a MidService
+
+export class MidService() {
+    statusUpdated = new EventEmitter<string>();
+}
+
+export ComponentA {
+     constructor(private midService: MidService) {}
+     onAction() {
+         midService.statusUpdated.emit("something happened")
+     }
+}
+
+export ComponentB {
+     constructor(private midService: MidService,) {
+      this.midService.statusUpdated.subscribe(
+             (status: string) => alert('New Status: ' + status)
+      );
+    }
+}
+
+
+// Array - addAll
+
+this.ingredients.forEach(
+   it => this.ingredients.push(it)
+  );
+
+this.ingredients.push(...ingredients);
+
+
+// safe check and loop
+recipe = ...
+if(recipe['ingredients']) {
+    for(let ingredient of recipe.ingredients) {
+
+    }
+}
+
+// ----------------------
+// Pipe
+
+https://angular.io/api
+
+ng g p filter --spec false
+
+<input type="text" [(ngModel)]="filteredStatus">
+
+<li
+    class="list-group-item"
+    *ngFor="let server of servers | filter:filteredStatus:'status'"
+    [ngClass]="getStatusClasses(server)">
+    <span
+      class="badge">
+      {{ server.status }}
+  </span>
+    <strong>{{ server.name | shorten:15 }}</strong> |
+    {{ server.instanceType | uppercase }} |
+    {{ server.started | date:'fullDate' | uppercase }}
+</li>
+
+
+// Pipe - Create a custom pipe
+
+@Pipe({
+  name: 'shorten'
+})
+export class ShortenPipe implements PipeTransform {
+  transform(value: any, limit: number) {
+    if (value.length > limit) {
+      return value.substr(0, limit) + ' ...';
+    }
+    return value;
+  }
+}
+
+// Pipe - filter an array
+
+<input type="text" [(ngModel)]="filteredStatus">
+
+*ngFor="let server of servers | filter:filteredStatus:'status'"
+
+@Pipe({
+  name: 'filter',
+  pure: false  ////* default 'true',  in filter model, data change will not cause refresh.
+               ////* force refresh if set false.  when having long list, you will have performance issue
+})
+export class FilterPipe implements PipeTransform {
+  transform(value: any, filterString: string, propName: string): any {}
+
+}
+
+// Pipe - async pipe - show Promise data on the screen
+<h2>App Status: {{ appStatus | async}}</h2>
+
+appStatus = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('stable');
+  }, 2000);
+});
+
+
+//---------------------------
+// Http
+
+imports: [
+ ...
+  HttpClientModule
+],
+
+//- http - post/put
+
+const headers = new Headers({'Content-Type': 'application/json'});
+  //   this.http.post('https://udemy-ng-http.firebaseio.com/data.json',
+  //   servers,
+  //   {headers: headers});
+
+  this.http.put('https://udemy-ng-http.firebaseio.com/data.json',
+  servers,
+  {headers: headers});
+
+//- http - Get - transform data using Map
+
+this.http.get('https://udemy-ng-http.firebaseio.com/data')
+    .map(
+      (response: Response) => {
+        const data = response.json();
+        for (const server of data) {
+          server.name = 'FETCHED_' + server.name;
+        }
+        return da;
+      }
+    )
+    .catch(
+      (error: Response) => {
+        return Observable.throw('Something went wrong');
+      }
+    );
+
+
+
+// Optimization
+
+1. Lazy load  + PreLoad
+
+{path: 'recipes', loadChildren: './recipes/recipes.module#RecipesModule'},
+
+imports: [RouterModule.forRoot(appRoutes, {preloadingStrategy: PreloadAllModules})],
+
+2. AOT compilation
+ng build --prod --aot  // ahead of time build
+
+./dist/*
+
+
+
+// Deployment
+
+1. AOT build
+2. select correct base URL
+ change index.html  <base href="/">
+or ng build --prod --aot --base-href  /my-app
+
+3. always return index.html instead of 404.html
+
+
+
+
+
+
+
+
+
+1
