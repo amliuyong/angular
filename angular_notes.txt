@@ -632,6 +632,14 @@ const req = new HttpRequest('PUT',
  # Object{type: 1, loaded: 200, total:500 }
 
 
+// update HttpRequest - request.clone
+const copiedReq = req.clone(
+    {
+     // headers: req.headers.append('Authorization', 'Bearer XXXX'),
+      params: req.params.set('auth', this.authService.token)
+    });
+
+
 // Interceptors
 export class AuthInteceptor implements HttpInterceptor {
    intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
