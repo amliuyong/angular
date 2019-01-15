@@ -1,0 +1,122 @@
+imports: [
+    ....
+    StoreModule.forRoot({shoppingList: shoppingListReducer})
+  ],
+
+
+//src/app/shopping-list/store/shopping-list.reducers.ts
+
+  export interface AppState {
+    shoppingList: ShoppingListState
+  }
+
+  export interface ShoppingListState {
+    ingredients: Ingredient[];
+    editedIngredient: Ingredient;
+    editedIngredientIndex: number;
+  }
+
+  const initialState: ShoppingListState = {
+    ingredients: [ ... ],
+    editedIngredient: null,
+    editedIngredientIndex: -1
+  };
+
+  export function shoppingListReducer(state = initialState, action: ShoppingListActions) {
+
+    switch (action.type) {
+
+    case ADD_INGREDIENTS:
+      const act2: AddIngredients = <AddIngredients>action;
+      return {
+        ...state,
+        ingredients: [...state.ingredients, ...act2.payload]
+      };
+    }
+  }
+
+// src/app/shopping-list/store/shopping-list.actions.ts
+
+export class AddIngredient implements Action {
+  type: string = ADD_INGREDIENT;
+
+  constructor(public payload: Ingredient) {
+  }
+}
+
+export type ShoppingListActions = AddIngredient | AddIngredients | UpdateIngredient | DeleteIngredient | StartEdit;
+
+
+
+constructor(
+    private store: Store<AppState>) {
+  }
+
+// src/app/shopping-list/shopping-edit/shopping-edit.component.ts
+
+  ngOnInit() {
+    this.subscription = this.store.select('shoppingList')
+      .subscribe(
+        data => {
+          console.log('subscribe', data);
+          if (data.editedIngredientIndex > -1) {
+            this.editItem = data.editedIngredient;
+            this.editMode = true;
+            this.slForm.setValue(
+              {
+                name: this.editItem.name,
+                amount: this.editItem.amount
+              }
+            );
+          } else {
+            this.editMode = false;
+          }
+        }
+      );
+  }
+
+  ngOnDestroy(): void {
+    this.store.dispatch(new StopEdit());
+    this.subscription.unsubscribe();
+  }
+
+  this.store.dispatch(new AddIngredient(newIngredient));
+
+
+// src/app/shopping-list/shopping-list.component
+
+shoppingListState: Observable<{ ingredients: Ingredient[] }>;
+
+ngOnInit() {
+  this.shoppingListState = this.store.select('shoppingList');
+}
+
+this.store.dispatch(new StartEdit(index));
+
+<ul class="list-group">
+     <a class="list-group-item"
+        style="cursor: pointer"
+        *ngFor="let ingredient of (shoppingListState | async).ingredients; let i = index"
+        (click)="onEditItem(i)"
+     >
+       {{ingredient.name}} ({{ingredient.amount}})
+
+     </a>
+  </ul>
+
+
+
+// map
+this.store.select('auth').map(
+  (authState: AuthState) => authState.authenticated
+);
+
+// switchMap
+this.store.select('auth').switchMap(
+  (authState: AuthState) => {
+    const copiedReq = req.clone({
+      params: req.params.set('auth', authState.token)
+    });
+    return next.handle(copiedReq);
+  }
+);
