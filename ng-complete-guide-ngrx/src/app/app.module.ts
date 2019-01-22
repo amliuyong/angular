@@ -12,6 +12,9 @@ import {StoreModule} from '@ngrx/store';
 import {reducers} from './store/app.reducers';
 import {EffectsModule} from '@ngrx/effects';
 import {AuthEffects} from './auth/auth.effects';
+import {StoreRouterConnectingModule} from '@ngrx/router-store';
+import {StoreDevtools, StoreDevtoolsModule} from '@ngrx/store-devtools';
+import {environment} from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -27,7 +30,9 @@ import {AuthEffects} from './auth/auth.effects';
     AuthModule,
     CoreModule,
     StoreModule.forRoot(reducers),
-    EffectsModule.forRoot([AuthEffects])
+    EffectsModule.forRoot([AuthEffects]),
+    StoreRouterConnectingModule, // and install redux chrome plugin
+    environment.production ? [] : StoreDevtoolsModule.instrument()
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -4,6 +4,20 @@ imports: [
   ],
 
 
+  "@ngrx/router-store": "^7.0.0",
+  "@ngrx/store": "^7.0.0",
+  "@ngrx/store-devtools": "^7.0.0",
+
+imports: [
+ ...
+     StoreModule.forRoot(reducers),
+     EffectsModule.forRoot([AuthEffects]),
+     StoreRouterConnectingModule, // and need to install Redux Chrome plugin
+     environment.production ? [] : StoreDevtoolsModule.instrument()
+
+  ]
+
+
 //src/app/shopping-list/store/shopping-list.reducers.ts
 
   export interface AppState {
@@ -120,3 +134,18 @@ this.store.select('auth').switchMap(
     return next.handle(copiedReq);
   }
 );
+
+
+
+
+
+// Lazy load feature
+
+imports:[
+    ...
+    StoreModule.forFeature('recipes', recipeReducer)
+  ]
+})
+export class RecipesModule {
+
+}
